@@ -20,10 +20,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.blessingskabondo.snack519fde1d6a00423c8199a848fc6aa052"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3eb521be-8f45-4ff8-9c27-5f7faf8f5de9"
+      }
+    },
+    "owner": "blessingskabondo"
   }
 }
