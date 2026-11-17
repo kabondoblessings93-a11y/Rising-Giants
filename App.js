@@ -1,91 +1,39 @@
-import {
-  SafeAreaView,
-  ScrollView,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
-const SUMMARY = [
-  { label: 'Open Questions', value: 4, color: '#3b82f6' },
-  { label: 'Prayer Requests', value: 7, color: '#8b5cf6' },
-  { label: 'Testimonies', value: 2, color: '#10b981' },
-];
+import HomeScreen from './src/screens/HomeScreen';
+import ProductivityScreen from './src/screens/ProductivityScreen';
+import PlanningScreen from './src/screens/PlanningScreen';
 
-const RECENT_ITEMS = [
-  { type: 'Question', text: 'What does Romans 8:28 really mean?', time: '2h ago' },
-  { type: 'Prayer Request', text: 'Please pray for my exams this week.', time: '5h ago' },
-  { type: 'Testimony', text: 'God provided a job after months of waiting!', time: '1d ago' },
-];
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Rising Giants</Text>
-        <Text style={styles.subtitle}>Ministry & Productivity Assistant</Text>
-
-        <Text style={styles.sectionTitle}>Community Overview</Text>
-        <View style={styles.row}>
-          {SUMMARY.map((item) => (
-            <View key={item.label} style={[styles.card, { borderTopColor: item.color }]}>
-              <Text style={styles.cardValue}>{item.value}</Text>
-              <Text style={styles.cardLabel}>{item.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
-        {RECENT_ITEMS.map((item, i) => (
-          <View key={i} style={styles.listItem}>
-            <Text style={styles.itemType}>{item.type}</Text>
-            <Text style={styles.itemText}>{item.text}</Text>
-            <Text style={styles.itemTime}>{item.time}</Text>
-          </View>
-        ))}
-
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>+ Capture from WhatsApp</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarActiveTintColor: '#2563eb',
+          tabBarInactiveTintColor: '#94a3b8',
+          headerStyle: { backgroundColor: '#fff' },
+          headerTitleStyle: { color: '#0f172a', fontWeight: '700' },
+          tabBarIcon: ({ color, size }) => {
+            let iconName;
+            if (route.name === 'Community') iconName = 'people-outline';
+            else if (route.name === 'Productivity') iconName = 'time-outline';
+            else if (route.name === 'Planning') iconName = 'calendar-outline';
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+        })}
+      >
+        <Tab.Screen
+          name="Community"
+          component={HomeScreen}
+          options={{ headerTitle: 'Rising Giants' }}
+        />
+        <Tab.Screen name="Productivity" component={ProductivityScreen} />
+        <Tab.Screen name="Planning" component={PlanningScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  scroll: { padding: 20 },
-  title: { fontSize: 26, fontWeight: '700', color: '#0f172a' },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a', marginBottom: 12, marginTop: 8 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
-  card: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-    marginHorizontal: 4,
-    borderRadius: 12,
-    borderTopWidth: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardValue: { fontSize: 22, fontWeight: '700', color: '#0f172a' },
-  cardLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
-  listItem: { backgroundColor: '#fff', padding: 14, borderRadius: 10, marginBottom: 10 },
-  itemType: { fontSize: 11, color: '#3b82f6', fontWeight: '600', textTransform: 'uppercase' },
-  itemText: { fontSize: 14, color: '#0f172a', marginTop: 4 },
-  itemTime: { fontSize: 11, color: '#94a3b8', marginTop: 6 },
-  button: {
-    backgroundColor: '#2563eb',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
