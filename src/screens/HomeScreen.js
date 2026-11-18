@@ -21,9 +21,9 @@ const SUMMARY = [
 const CATEGORIES = ['Question', 'Prayer Request', 'Testimony', 'Teaching', 'Announcement'];
 
 const INITIAL_ITEMS = [
-  { id: '1', type: 'Question', text: 'What does Romans 8:28 really mean?', time: '2h ago' },
-  { id: '2', type: 'Prayer Request', text: 'Please pray for my exams this week.', time: '5h ago' },
-  { id: '3', type: 'Testimony', text: 'God provided a job after months of waiting!', time: '1d ago' },
+  { id: '1', type: 'Question', text: 'What does Romans 8:28 really mean?', time: '2h ago' , createdAt: Date.now() - 2 * 60 * 60 * 1000 },
+  { id: '2', type: 'Prayer Request', text: 'Please pray for my exams this week.', time: '5h ago' , createdAt: Date.now() - 5 * 60 * 60 * 1000 },
+  { id: '3', type: 'Testimony', text: 'God provided a job after months of waiting!', time: '1d ago' , createdAt: Date.now() - 24 * 60 * 60 * 1000 },
 ];
 
 export default function HomeScreen() {
@@ -33,6 +33,8 @@ export default function HomeScreen() {
   const [captureCategory, setCaptureCategory] = useState('Question');
   const [searchText, setSearchText] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [editCategory, setEditCategory] = useState('Question');
 
   const filteredItems = items.filter((item) => {
     const matchSearch =
@@ -50,11 +52,39 @@ export default function HomeScreen() {
       type: captureCategory,
       text: trimmed,
       time: 'Just now',
+      createdAt: Date.now(),
     };
     setItems((prev) => [newItem, ...prev]);
     setCaptureText('');
     setCaptureCategory('Question');
     setModalVisible(false);
+  };
+
+  const openDetail = (item) => {
+    setSelectedItem(item);
+    setEditCategory(item.type);
+  };
+
+  const saveDetail = () => {
+    if (!selectedItem) return;
+    setItems((prev) =>
+      prev.map((i) => (i.id === selectedItem.id ? { ...i, type: editCategory } : i))
+    );
+    setSelectedItem(null);
+  };
+
+  const deleteItem = () => {
+    if (!selectedItem) return;
+    setItems((prev) => prev.filter((i) => i.id !== selectedItem.id));
+    setSelectedItem(null);
+  };
+
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = items.filter((i) => (i.createdAt || 0) >= weekAgo);
+  const weekCounts = {
+    Question: thisWeek.filter((i) => i.type === 'Question').length,
+    Prayer: thisWeek.filter((i) => i.type === 'Prayer Request').length,
+    Testimony: thisWeek.filter((i) => i.type === 'Testimony').length,
   };
 
   return (
@@ -69,6 +99,24 @@ export default function HomeScreen() {
               <Text style={styles.cardLabel}>{item.label}</Text>
             </View>
           ))}
+        </View>
+
+        <View style={styles.weekCard}>
+          <Text style={styles.weekTitle}>This Week</Text>
+          <View style={styles.weekRow}>
+            <View style={styles.weekStat}>
+              <Text style={styles.weekValue}>{weekCounts.Question}</Text>
+              <Text style={styles.weekLabel}>Questions</Text>
+            </View>
+            <View style={styles.weekStat}>
+              <Text style={styles.weekValue}>{weekCounts.Prayer}</Text>
+              <Text style={styles.weekLabel}>Prayers</Text>
+            </View>
+            <View style={styles.weekStat}>
+              <Text style={styles.weekValue}>{weekCounts.Testimony}</Text>
+              <Text style={styles.weekLabel}>Testimonies</Text>
+            </View>
+          </View>
         </View>
 
         <TextInput
@@ -95,11 +143,16 @@ export default function HomeScreen() {
 
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         {filteredItems.map((item) => (
-          <View key={item.id} style={styles.listItem}>
+          <TouchableOpacity
+            key={item.id}
+            style={styles.listItem}
+            onPress={() => openDetail(item)}
+            activeOpacity={0.7}
+          >
             <Text style={styles.itemType}>{item.type}</Text>
             <Text style={styles.itemText}>{item.text}</Text>
             <Text style={styles.itemTime}>{item.time}</Text>
-          </View>
+          </TouchableOpacity>
         ))}
 
         {filteredItems.length === 0 && (
@@ -161,6 +214,48 @@ export default function HomeScreen() {
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.btn, styles.addBtn]} onPress={saveCapture}>
+                <Text style={styles.addText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={selectedItem !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSelectedItem(null)}
+      >
+        <KeyboardAvoidingView
+          style={styles.backdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Capture Details</Text>
+            <Text style={styles.detailText}>{selectedItem?.text}</Text>
+            <Text style={styles.label}>Category</Text>
+            <View style={styles.chipRow}>
+              {CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.chip, editCategory === cat && styles.chipActive]}
+                  onPress={() => setEditCategory(cat)}
+                >
+                  <Text style={[styles.chipText, editCategory === cat && styles.chipTextActive]}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.actions}>
+              <TouchableOpacity style={[styles.btn, styles.deleteBtn]} onPress={deleteItem}>
+                <Text style={styles.deleteText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={() => setSelectedItem(null)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.addBtn]} onPress={saveDetail}>
                 <Text style={styles.addText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -267,4 +362,13 @@ const styles = StyleSheet.create({
   filterChipActive: { backgroundColor: '#2563eb' },
   filterChipText: { fontSize: 12, color: '#0f172a', fontWeight: '500' },
   filterChipTextActive: { color: '#fff' },
+  weekCard: { backgroundColor: '#fff', padding: 16, borderRadius: 12, marginBottom: 16, elevation: 2 },
+  weekTitle: { fontSize: 14, fontWeight: '600', color: '#0f172a', marginBottom: 12 },
+  weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  weekStat: { flex: 1, alignItems: 'center' },
+  weekValue: { fontSize: 22, fontWeight: '700', color: '#2563eb' },
+  weekLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
+  detailText: { fontSize: 15, color: '#0f172a', backgroundColor: '#f8fafc', padding: 14, borderRadius: 10, marginBottom: 16, lineHeight: 22 },
+  deleteBtn: { backgroundColor: '#fee2e2' },
+  deleteText: { color: '#dc2626', fontWeight: '600' },
 });
