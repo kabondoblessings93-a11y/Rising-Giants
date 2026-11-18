@@ -1,5 +1,6 @@
 import { usePersistedState } from '../hooks/usePersistedState';
 import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -23,15 +24,22 @@ const STATUS_COLORS = {
 const STATUS_ORDER = ['Planned', 'Preparing', 'Awaiting Approval', 'Scheduled', 'Completed'];
 
 const INITIAL_ACTIVITIES = [
-  { id: '1', name: 'Truth Tuesdays', status: 'Preparing' },
-  { id: '2', name: 'Faith Fridays', status: 'Awaiting Approval' },
-  { id: '3', name: 'Ask Anything Sundays', status: 'Scheduled' },
+  { id: '1', name: 'Truth Tuesdays', status: 'Preparing', description: '', targetDate: '', notes: '', reminder: false },
+  { id: '2', name: 'Faith Fridays', status: 'Awaiting Approval', description: '', targetDate: '', notes: '', reminder: false },
+  { id: '3', name: 'Ask Anything Sundays', status: 'Scheduled', description: '', targetDate: '', notes: '', reminder: false },
 ];
 
 export default function PlanningScreen() {
   const [activities, setActivities] = usePersistedState('activities', INITIAL_ACTIVITIES);
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
+  const [selectedId, setSelectedId] = useState(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [editReminder, setEditReminder] = useState(false);
+
+  const selected = activities.find((a) => a.id === selectedId);
 
   const advanceStatus = (id) => {
     setActivities((prev) =>
@@ -48,28 +56,61 @@ export default function PlanningScreen() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     setActivities((prev) => [
-      { id: String(Date.now()), name: trimmed, status: 'Planned' },
+      { id: String(Date.now()), name: trimmed, status: 'Planned', description: '', targetDate: '', notes: '', reminder: false },
       ...prev,
     ]);
     setNewName('');
     setModalVisible(false);
   };
 
+  const openDetail = (item) => {
+    setSelectedId(item.id);
+    setEditDescription(item.description || '');
+    setEditDate(item.targetDate || '');
+    setEditNotes(item.notes || '');
+    setEditReminder(item.reminder || false);
+  };
+
+  const saveDetail = () => {
+    if (!selectedId) return;
+    setActivities((prev) =>
+      prev.map((a) =>
+        a.id === selectedId
+          ? { ...a, description: editDescription, targetDate: editDate, notes: editNotes, reminder: editReminder }
+          : a
+      )
+    );
+    setSelectedId(null);
+  };
+
+  const deleteActivity = () => {
+    if (!selectedId) return;
+    setActivities((prev) => prev.filter((a) => a.id !== selectedId));
+    setSelectedId(null);
+  };
+
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Ministry Planning</Text>
-        <Text style={styles.subtitle}>Tap an activity to advance its status.</Text>
+        <Text style={styles.subtitle}>
+          {activities.length} {activities.length === 1 ? 'activity' : 'activities'} · tap to manage
+        </Text>
 
         {activities.map((item) => (
           <TouchableOpacity
             key={item.id}
             style={styles.card}
-            onPress={() => advanceStatus(item.id)}
+            onPress={() => openDetail(item)}
             activeOpacity={0.7}
           >
             <View style={styles.rowBetween}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
+              <View style={styles.cardTitleRow}>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                {item.reminder && (
+                  <Ionicons name="notifications" size={14} color="#f59e0b" style={styles.reminderIcon} />
+                )}
+              </View>
               <Text style={[styles.badge, { color: STATUS_COLORS[item.status] }]}>
                 {item.status}
               </Text>
@@ -117,6 +158,82 @@ export default function PlanningScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={[styles.btn, styles.addBtn]} onPress={addActivity}>
                 <Text style={styles.addText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={selectedId !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSelectedId(null)}
+      >
+        <KeyboardAvoidingView
+          style={styles.backdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{selected?.name || 'Activity'}</Text>
+            {selected && (
+              <TouchableOpacity
+                style={styles.statusRow}
+                onPress={() => advanceStatus(selectedId)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.badge, { color: STATUS_COLORS[selected.status] }]}>
+                  {selected.status}
+                </Text>
+                <Text style={styles.advanceText}>Tap to advance →</Text>
+              </TouchableOpacity>
+            )}
+
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="What is this activity about?"
+              value={editDescription}
+              onChangeText={setEditDescription}
+            />
+
+            <Text style={styles.label}>Target Date</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g. 25 Dec 2026"
+              value={editDate}
+              onChangeText={setEditDate}
+            />
+
+            <Text style={styles.label}>Notes</Text>
+            <TextInput
+              style={[styles.input, styles.notesInput]}
+              placeholder="Preparation notes..."
+              value={editNotes}
+              onChangeText={setEditNotes}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={styles.reminderRow}
+              onPress={() => setEditReminder(!editReminder)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, editReminder && styles.checkboxDone]}>
+                {editReminder && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.reminderLabel}>Set reminder</Text>
+            </TouchableOpacity>
+
+            <View style={styles.actions}>
+              <TouchableOpacity style={[styles.btn, styles.deleteBtn]} onPress={deleteActivity}>
+                <Text style={styles.deleteText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={() => setSelectedId(null)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.addBtn]} onPress={saveDetail}>
+                <Text style={styles.addText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -172,4 +289,26 @@ const styles = StyleSheet.create({
   cancelText: { color: '#0f172a', fontWeight: '600' },
   addBtn: { backgroundColor: '#2563eb' },
   addText: { color: '#fff', fontWeight: '600' },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  reminderIcon: { marginLeft: 6 },
+  statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10 },
+  advanceText: { fontSize: 12, color: '#2563eb', fontWeight: '600' },
+  label: { fontSize: 13, fontWeight: '600', color: '#0f172a', marginBottom: 6, marginTop: 10 },
+  notesInput: { minHeight: 70, textAlignVertical: 'top' },
+  reminderRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, marginTop: 6 },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  checkboxDone: { backgroundColor: '#10b981', borderColor: '#10b981' },
+  checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  reminderLabel: { fontSize: 14, color: '#0f172a' },
+  deleteBtn: { backgroundColor: '#fee2e2' },
+  deleteText: { color: '#dc2626', fontWeight: '600' },
 });
