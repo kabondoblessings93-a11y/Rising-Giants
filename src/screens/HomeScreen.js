@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const SUMMARY = [
   { label: 'Open Questions', value: 4, color: '#3b82f6' },
@@ -35,6 +36,7 @@ export default function HomeScreen() {
   const [filterCategory, setFilterCategory] = useState('All');
   const [selectedItem, setSelectedItem] = useState(null);
   const [editCategory, setEditCategory] = useState('Question');
+  const [reportVisible, setReportVisible] = useState(false);
 
   const filteredItems = items.filter((item) => {
     const matchSearch =
@@ -87,6 +89,19 @@ export default function HomeScreen() {
     Testimony: thisWeek.filter((i) => i.type === 'Testimony').length,
   };
 
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+  const dailyCounts = Array.from({ length: 7 }, (_, i) => {
+    const dayEnd = now - (6 - i) * dayMs;
+    const dayStart = dayEnd - dayMs;
+    const count = items.filter((it) => {
+      const t = it.createdAt || 0;
+      return t >= dayStart && t < dayEnd;
+    }).length;
+    const mid = new Date(dayEnd - dayMs / 2);
+    return { label: mid.toLocaleDateString('en', { weekday: 'short' }), count };
+  });
+
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -101,7 +116,11 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <View style={styles.weekCard}>
+        <TouchableOpacity
+          style={styles.weekCard}
+          onPress={() => setReportVisible(true)}
+          activeOpacity={0.7}
+        >
           <Text style={styles.weekTitle}>This Week</Text>
           <View style={styles.weekRow}>
             <View style={styles.weekStat}>
@@ -117,7 +136,8 @@ export default function HomeScreen() {
               <Text style={styles.weekLabel}>Testimonies</Text>
             </View>
           </View>
-        </View>
+          <Text style={styles.weekHint}>Tap for full report →</Text>
+        </TouchableOpacity>
 
         <TextInput
           style={styles.searchInput}
@@ -262,6 +282,91 @@ export default function HomeScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+      <Modal
+        visible={reportVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setReportVisible(false)}
+      >
+        <View style={styles.reportBackdrop}>
+          <View style={styles.reportCard}>
+            <View style={styles.reportHeader}>
+              <Text style={styles.reportTitle}>Weekly Report</Text>
+              <TouchableOpacity onPress={() => setReportVisible(false)}>
+                <Ionicons name="close" size={24} color="#0f172a" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.reportScroll}>
+              <Text style={styles.reportTotal}>
+                {thisWeek.length} {thisWeek.length === 1 ? 'capture' : 'captures'} this week
+              </Text>
+
+              <Text style={styles.reportSection}>By Category</Text>
+              {CATEGORIES.map((cat) => {
+                const count = thisWeek.filter((i) => i.type === cat).length;
+                const pct = thisWeek.length === 0 ? 0 : (count / thisWeek.length) * 100;
+                return (
+                  <View key={cat} style={styles.catRow}>
+                    <Text style={styles.catName}>{cat}</Text>
+                    <View style={styles.barTrack}>
+                      <View style={[styles.barFill, { width: pct + '%' }]} />
+                    </View>
+                    <Text style={styles.catCount}>{count}</Text>
+                  </View>
+                );
+              })}
+
+              <Text style={styles.reportSection}>Last 7 Days</Text>
+              <View style={styles.dayChart}>
+                {dailyCounts.map((d, i) => {
+                  const maxCount = Math.max(...dailyCounts.map((x) => x.count), 1);
+                  const height = d.count === 0 ? 4 : (d.count / maxCount) * 60;
+                  return (
+                    <View key={i} style={styles.dayCol}>
+                      <Text style={styles.dayCount}>{d.count}</Text>
+                      <View style={[styles.dayBar, { height }]} />
+                      <Text style={styles.dayLabel}>{d.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.reportSection}>Open Questions</Text>
+              {thisWeek.filter((i) => i.type === 'Question').length === 0 ? (
+                <Text style={styles.reportEmpty}>None this week</Text>
+              ) : (
+                thisWeek.filter((i) => i.type === 'Question').map((q) => (
+                  <View key={q.id} style={styles.reportItem}>
+                    <Text style={styles.reportItemText}>{q.text}</Text>
+                  </View>
+                ))
+              )}
+
+              <Text style={styles.reportSection}>Prayer Requests</Text>
+              {thisWeek.filter((i) => i.type === 'Prayer Request').length === 0 ? (
+                <Text style={styles.reportEmpty}>None this week</Text>
+              ) : (
+                thisWeek.filter((i) => i.type === 'Prayer Request').map((p) => (
+                  <View key={p.id} style={styles.reportItem}>
+                    <Text style={styles.reportItemText}>{p.text}</Text>
+                  </View>
+                ))
+              )}
+
+              <Text style={styles.reportSection}>Testimonies</Text>
+              {thisWeek.filter((i) => i.type === 'Testimony').length === 0 ? (
+                <Text style={styles.reportEmpty}>None this week</Text>
+              ) : (
+                thisWeek.filter((i) => i.type === 'Testimony').map((t) => (
+                  <View key={t.id} style={styles.reportItem}>
+                    <Text style={styles.reportItemText}>{t.text}</Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -371,4 +476,25 @@ const styles = StyleSheet.create({
   detailText: { fontSize: 15, color: '#0f172a', backgroundColor: '#f8fafc', padding: 14, borderRadius: 10, marginBottom: 16, lineHeight: 22 },
   deleteBtn: { backgroundColor: '#fee2e2' },
   deleteText: { color: '#dc2626', fontWeight: '600' },
+  weekHint: { fontSize: 11, color: '#2563eb', textAlign: 'right', marginTop: 10, fontWeight: '500' },
+  reportBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', paddingTop: 60, paddingBottom: 20, paddingHorizontal: 16 },
+  reportCard: { flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 20 },
+  reportHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  reportTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a' },
+  reportScroll: { flex: 1 },
+  reportTotal: { fontSize: 14, color: '#64748b', marginBottom: 16 },
+  reportSection: { fontSize: 14, fontWeight: '600', color: '#0f172a', marginTop: 16, marginBottom: 10 },
+  catRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  catName: { width: 110, fontSize: 12, color: '#0f172a' },
+  barTrack: { flex: 1, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, marginHorizontal: 8, overflow: 'hidden' },
+  barFill: { height: 8, backgroundColor: '#2563eb', borderRadius: 4 },
+  catCount: { width: 28, fontSize: 12, fontWeight: '600', color: '#0f172a', textAlign: 'right' },
+  dayChart: { flexDirection: 'row', alignItems: 'flex-end', height: 90, marginBottom: 20 },
+  dayCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
+  dayCount: { fontSize: 10, color: '#64748b', marginBottom: 2 },
+  dayBar: { width: 20, backgroundColor: '#2563eb', borderRadius: 4 },
+  dayLabel: { fontSize: 10, color: '#64748b', marginTop: 4 },
+  reportItem: { backgroundColor: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 8 },
+  reportItemText: { fontSize: 13, color: '#0f172a', lineHeight: 18 },
+  reportEmpty: { fontSize: 13, color: '#94a3b8', fontStyle: 'italic', paddingVertical: 8 },
 });
