@@ -1,14 +1,27 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, Platform, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveData, loadData } from '../lib/storage';
 
-const STORAGE_KEYS = ['items', 'routines', 'activities', 'tasks'];
+const STORAGE_KEYS = ['items', 'routines', 'activities', 'tasks', 'chatHistory'];
 
 export default function SettingsScreen() {
   const [exportVisible, setExportVisible] = useState(false);
   const [exportData, setExportData] = useState('');
   const [resetVisible, setResetVisible] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [keySaved, setKeySaved] = useState(false);
+
+  useEffect(() => {
+    loadData('apiKey', '').then((k) => setApiKey(typeof k === 'string' ? k : ''));
+  }, []);
+
+  const saveKey = async () => {
+    await saveData('apiKey', apiKey.trim());
+    setKeySaved(true);
+    setTimeout(() => setKeySaved(false), 2000);
+  };
 
   const handleExport = async () => {
     try {
@@ -68,6 +81,27 @@ export default function SettingsScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
       </TouchableOpacity>
+
+      <Text style={styles.sectionTitle}>AI Assistant</Text>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.infoTitle}>Groq API Key</Text>
+        <Text style={styles.infoText}>
+          Get a free key from console.groq.com. Paste it below to enable the Assistant tab.
+        </Text>
+        <TextInput
+          style={styles.keyInput}
+          placeholder="gsk_..."
+          value={apiKey}
+          onChangeText={setApiKey}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+        />
+        <TouchableOpacity style={styles.saveKeyBtn} onPress={saveKey}>
+          <Text style={styles.saveKeyText}>{keySaved ? 'Saved ✓' : 'Save Key'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.sectionTitle}>About</Text>
 
@@ -161,4 +195,7 @@ const styles = StyleSheet.create({
   cancelText: { color: '#0f172a', fontWeight: '600' },
   deleteBtn: { backgroundColor: '#fee2e2' },
   deleteText: { color: '#dc2626', fontWeight: '600' },
+  keyInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 12, fontSize: 13, color: '#0f172a', marginTop: 12, marginBottom: 10 },
+  saveKeyBtn: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  saveKeyText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 });

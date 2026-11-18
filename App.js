@@ -6,6 +6,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import ProductivityScreen from './src/screens/ProductivityScreen';
 import PlanningScreen from './src/screens/PlanningScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import AssistantScreen from './src/screens/AssistantScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,6 +24,7 @@ export default function App() {
             if (route.name === 'Community') iconName = 'people-outline';
             else if (route.name === 'Productivity') iconName = 'time-outline';
             else if (route.name === 'Planning') iconName = 'calendar-outline';
+            else if (route.name === 'Assistant') iconName = 'chatbubble-ellipses-outline';
             else if (route.name === 'Settings') iconName = 'settings-outline';
             return <Ionicons name={iconName} size={size} color={color} />;
           },
@@ -35,6 +37,7 @@ export default function App() {
         />
         <Tab.Screen name="Productivity" component={ProductivityScreen} />
         <Tab.Screen name="Planning" component={PlanningScreen} />
+        <Tab.Screen name="Assistant" component={AssistantScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
