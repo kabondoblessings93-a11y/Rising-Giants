@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, Pla
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEYS = ['items', 'routines', 'activities'];
+const STORAGE_KEYS = ['items', 'routines', 'activities', 'tasks'];
 
 export default function SettingsScreen() {
   const [exportVisible, setExportVisible] = useState(false);

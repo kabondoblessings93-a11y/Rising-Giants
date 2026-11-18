@@ -6,12 +6,21 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const INITIAL_ROUTINES = [
   { id: '1', label: 'Morning Prayer', done: false },
   { id: '2', label: 'Bible Study', done: false },
   { id: '3', label: 'Evening Reflection', done: false },
+];
+
+const INITIAL_TASKS = [
+  { id: '1', title: 'Prepare Sunday message notes', dueDate: '', done: false },
 ];
 
 function formatTime(total) {
@@ -25,6 +34,10 @@ export default function ProductivityScreen() {
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
   const [routines, setRoutines] = usePersistedState('routines', INITIAL_ROUTINES);
+  const [tasks, setTasks] = usePersistedState('tasks', INITIAL_TASKS);
+  const [taskModalVisible, setTaskModalVisible] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
 
   useEffect(() => {
     if (!running) return;
@@ -44,10 +57,32 @@ export default function ProductivityScreen() {
     );
   };
 
+  const addTask = () => {
+    const trimmed = newTaskTitle.trim();
+    if (!trimmed) return;
+    setTasks((prev) => [
+      { id: String(Date.now()), title: trimmed, dueDate: newTaskDate.trim(), done: false },
+      ...prev,
+    ]);
+    setNewTaskTitle('');
+    setNewTaskDate('');
+    setTaskModalVisible(false);
+  };
+
+  const toggleTask = (id) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  };
+
+  const deleteTask = (id) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
   const completed = routines.filter((r) => r.done).length;
+  const completedTasks = tasks.filter((t) => t.done).length;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+    <View style={styles.screen}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
       <Text style={styles.title}>Personal Productivity</Text>
       <Text style={styles.subtitle}>
         Track focus sessions and daily spiritual routines.
@@ -56,11 +91,15 @@ export default function ProductivityScreen() {
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{sessions}</Text>
-          <Text style={styles.summaryLabel}>Focus Sessions</Text>
+          <Text style={styles.summaryLabel}>Focus</Text>
         </View>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{completed}/{routines.length}</Text>
-          <Text style={styles.summaryLabel}>Routines Done</Text>
+          <Text style={styles.summaryLabel}>Routines</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryValue}>{completedTasks}/{tasks.length}</Text>
+          <Text style={styles.summaryLabel}>Tasks</Text>
         </View>
       </View>
 
@@ -109,7 +148,86 @@ export default function ProductivityScreen() {
           </TouchableOpacity>
         ))}
       </View>
-    </ScrollView>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Daily Tasks</Text>
+          <TouchableOpacity style={styles.addTaskBtn} onPress={() => setTaskModalVisible(true)}>
+            <Text style={styles.addTaskText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
+        {tasks.length === 0 && (
+          <Text style={styles.emptyTasks}>No tasks yet. Tap + Add to create one.</Text>
+        )}
+        {tasks.map((task) => (
+          <View key={task.id} style={styles.taskRow}>
+            <TouchableOpacity
+              style={styles.taskLeft}
+              onPress={() => toggleTask(task.id)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, task.done && styles.checkboxDone]}>
+                {task.done && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <View style={styles.taskTextBox}>
+                <Text style={[styles.taskTitle, task.done && styles.taskDone]}>
+                  {task.title}
+                </Text>
+                {task.dueDate ? <Text style={styles.taskDue}>Due: {task.dueDate}</Text> : null}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => deleteTask(task.id)}>
+              <Ionicons name="trash-outline" size={18} color="#dc2626" />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </View>
+      </ScrollView>
+
+      <Modal
+        visible={taskModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setTaskModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.backdrop}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>New Task</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="What needs to be done?"
+              value={newTaskTitle}
+              onChangeText={setNewTaskTitle}
+              autoFocus
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Due date (optional, e.g. 25 Dec)"
+              value={newTaskDate}
+              onChangeText={setNewTaskDate}
+            />
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.btn, styles.cancelBtn]}
+                onPress={() => {
+                  setNewTaskTitle('');
+                  setNewTaskDate('');
+                  setTaskModalVisible(false);
+                }}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.addBtn]} onPress={addTask}>
+                <Text style={styles.addText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+    </View>
   );
 }
 
@@ -156,4 +274,24 @@ const styles = StyleSheet.create({
   },
   summaryValue: { fontSize: 24, fontWeight: '700', color: '#0f172a' },
   summaryLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
+  screen: { flex: 1, backgroundColor: '#f8fafc' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  addTaskBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#2563eb' },
+  addTaskText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  emptyTasks: { textAlign: 'center', color: '#94a3b8', paddingVertical: 16, fontSize: 13 },
+  taskRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  taskLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  taskTextBox: { flex: 1, marginLeft: 14 },
+  taskTitle: { fontSize: 15, color: '#0f172a' },
+  taskDone: { color: '#94a3b8', textDecorationLine: 'line-through' },
+  taskDue: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#fff', padding: 24, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#0f172a', marginBottom: 16 },
+  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 14, fontSize: 15, color: '#0f172a', marginBottom: 12 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
+  cancelBtn: { backgroundColor: '#f1f5f9' },
+  cancelText: { color: '#0f172a', fontWeight: '600' },
+  addBtn: { backgroundColor: '#2563eb' },
+  addText: { color: '#fff', fontWeight: '600' },
 });
