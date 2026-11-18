@@ -1,3 +1,4 @@
+import { usePersistedState } from '../hooks/usePersistedState';
 import { useState } from 'react';
 import {
   View,
@@ -28,7 +29,7 @@ const INITIAL_ACTIVITIES = [
 ];
 
 export default function PlanningScreen() {
-  const [activities, setActivities] = useState(INITIAL_ACTIVITIES);
+  const [activities, setActivities] = usePersistedState('activities', INITIAL_ACTIVITIES);
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState('');
 

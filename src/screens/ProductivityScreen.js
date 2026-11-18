@@ -1,3 +1,4 @@
+import { usePersistedState } from '../hooks/usePersistedState';
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -23,7 +24,7 @@ export default function ProductivityScreen() {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const [sessions, setSessions] = useState(0);
-  const [routines, setRoutines] = useState(INITIAL_ROUTINES);
+  const [routines, setRoutines] = usePersistedState('routines', INITIAL_ROUTINES);
 
   useEffect(() => {
     if (!running) return;

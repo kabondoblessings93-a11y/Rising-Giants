@@ -1,3 +1,4 @@
+import { usePersistedState } from '../hooks/usePersistedState';
 import { useState } from 'react';
 import {
   ScrollView,
@@ -26,7 +27,7 @@ const INITIAL_ITEMS = [
 ];
 
 export default function HomeScreen() {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const [items, setItems] = usePersistedState('items', INITIAL_ITEMS);
   const [modalVisible, setModalVisible] = useState(false);
   const [captureText, setCaptureText] = useState('');
   const [captureCategory, setCaptureCategory] = useState('Question');
