@@ -53,6 +53,17 @@ export default function ProductivityScreen() {
         Track focus sessions and daily spiritual routines.
       </Text>
 
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryValue}>{sessions}</Text>
+          <Text style={styles.summaryLabel}>Focus Sessions</Text>
+        </View>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryValue}>{completed}/{routines.length}</Text>
+          <Text style={styles.summaryLabel}>Routines Done</Text>
+        </View>
+      </View>
+
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Focus Session</Text>
         <Text style={styles.timer}>{formatTime(seconds)}</Text>
@@ -133,4 +144,16 @@ const styles = StyleSheet.create({
   checkmark: { color: '#fff', fontSize: 14, fontWeight: '700' },
   routineLabel: { fontSize: 15, color: '#0f172a' },
   routineDone: { color: '#94a3b8', textDecorationLine: 'line-through' },
+  summaryRow: { flexDirection: 'row', marginBottom: 14 },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    elevation: 2,
+  },
+  summaryValue: { fontSize: 24, fontWeight: '700', color: '#0f172a' },
+  summaryLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
 });

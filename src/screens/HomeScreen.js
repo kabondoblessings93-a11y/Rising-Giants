@@ -31,6 +31,16 @@ export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [captureText, setCaptureText] = useState('');
   const [captureCategory, setCaptureCategory] = useState('Question');
+  const [searchText, setSearchText] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+
+  const filteredItems = items.filter((item) => {
+    const matchSearch =
+      searchText.trim() === '' ||
+      item.text.toLowerCase().includes(searchText.toLowerCase());
+    const matchCategory = filterCategory === 'All' || item.type === filterCategory;
+    return matchSearch && matchCategory;
+  });
 
   const saveCapture = () => {
     const trimmed = captureText.trim();
@@ -61,8 +71,30 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search captures..."
+          placeholderTextColor="#94a3b8"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+
+        <View style={styles.filterRow}>
+          {['All', 'Question', 'Prayer Request', 'Testimony', 'Teaching', 'Announcement'].map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.filterChip, filterCategory === cat && styles.filterChipActive]}
+              onPress={() => setFilterCategory(cat)}
+            >
+              <Text style={[styles.filterChipText, filterCategory === cat && styles.filterChipTextActive]}>
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={styles.sectionTitle}>Recent Activity</Text>
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <View key={item.id} style={styles.listItem}>
             <Text style={styles.itemType}>{item.type}</Text>
             <Text style={styles.itemText}>{item.text}</Text>
@@ -70,8 +102,12 @@ export default function HomeScreen() {
           </View>
         ))}
 
-        {items.length === 0 && (
-          <Text style={styles.empty}>No activity yet. Tap + below to capture one.</Text>
+        {filteredItems.length === 0 && (
+          <Text style={styles.empty}>
+            {items.length === 0
+              ? 'No activity yet. Tap + below to capture one.'
+              : 'No matches. Try a different search or filter.'}
+          </Text>
         )}
       </ScrollView>
 
@@ -209,4 +245,26 @@ const styles = StyleSheet.create({
   cancelText: { color: '#0f172a', fontWeight: '600' },
   addBtn: { backgroundColor: '#2563eb' },
   addText: { color: '#fff', fontWeight: '600' },
+  searchInput: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 14,
+    color: '#0f172a',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16 },
+  filterChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  filterChipActive: { backgroundColor: '#2563eb' },
+  filterChipText: { fontSize: 12, color: '#0f172a', fontWeight: '500' },
+  filterChipTextActive: { color: '#fff' },
 });
