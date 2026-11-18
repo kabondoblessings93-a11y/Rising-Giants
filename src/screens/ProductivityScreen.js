@@ -80,6 +80,17 @@ export default function ProductivityScreen() {
   const completed = routines.filter((r) => r.done).length;
   const completedTasks = tasks.filter((t) => t.done).length;
 
+  const totalThings = routines.length + tasks.length;
+  const doneThings = completed + completedTasks;
+  const summaryText =
+    totalThings === 0
+      ? 'Nothing to track yet — add a routine or task.'
+      : doneThings === 0
+      ? 'Ready to start the day.'
+      : doneThings === totalThings
+      ? 'Everything done today 🎉'
+      : `${doneThings} of ${totalThings} things done today.`;
+
   return (
     <View style={styles.screen}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
@@ -100,6 +111,31 @@ export default function ProductivityScreen() {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{completedTasks}/{tasks.length}</Text>
           <Text style={styles.summaryLabel}>Tasks</Text>
+        </View>
+      </View>
+
+      <View style={styles.insightCard}>
+        <Text style={styles.insightTitle}>Today's Insights</Text>
+        <Text style={styles.insightSummary}>{summaryText}</Text>
+        <View style={styles.insightRow}>
+          <Text style={styles.insightIcon}>⏱</Text>
+          <Text style={styles.insightText}>
+            {sessions === 0
+              ? 'No focus sessions completed yet'
+              : `${sessions} focus session${sessions === 1 ? '' : 's'} completed today`}
+          </Text>
+        </View>
+        <View style={styles.insightRow}>
+          <Text style={styles.insightIcon}>🙏</Text>
+          <Text style={styles.insightText}>
+            {completed} of {routines.length} routines done
+          </Text>
+        </View>
+        <View style={styles.insightRow}>
+          <Text style={styles.insightIcon}>✅</Text>
+          <Text style={styles.insightText}>
+            {completedTasks} of {tasks.length} tasks done
+          </Text>
         </View>
       </View>
 
@@ -294,4 +330,10 @@ const styles = StyleSheet.create({
   cancelText: { color: '#0f172a', fontWeight: '600' },
   addBtn: { backgroundColor: '#2563eb' },
   addText: { color: '#fff', fontWeight: '600' },
+  insightCard: { backgroundColor: '#eff6ff', padding: 16, borderRadius: 12, marginBottom: 14, borderLeftWidth: 4, borderLeftColor: '#2563eb' },
+  insightTitle: { fontSize: 14, fontWeight: '700', color: '#1e40af', marginBottom: 6 },
+  insightSummary: { fontSize: 15, fontWeight: '600', color: '#0f172a', marginBottom: 12, lineHeight: 20 },
+  insightRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  insightIcon: { fontSize: 16, marginRight: 10, width: 22 },
+  insightText: { fontSize: 13, color: '#334155', flex: 1 },
 });
