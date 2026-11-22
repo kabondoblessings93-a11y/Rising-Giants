@@ -151,3 +151,14 @@ export interface AiChatMessage {
   model?: string;
   productivityIncluded?: boolean;
 }
+
+
+export type DailyMood = "good" | "not_bad" | "bad";
+
+export interface MoodCheckInRecord {
+  id: string;
+  dateKey: string;
+  mood: DailyMood;
+  note: string;
+  submittedAt: string;
+}

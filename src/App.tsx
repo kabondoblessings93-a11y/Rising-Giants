@@ -5,6 +5,8 @@ import { CommunityScreen } from "./screens/CommunityScreen";
 import { MinistryScreen } from "./screens/MinistryScreen";
 import { ProductivityScreen } from "./screens/ProductivityScreen";
 import { AssistantScreen } from "./screens/AssistantScreen";
+import { SettingsScreen, type RetentionDays } from "./screens/SettingsScreen";
+import { DailyMoodCheckIn } from "./screens/DailyMoodCheckIn";
 import {
   INITIAL_GROUP_PROFILE,
   INITIAL_COMMUNITY_ITEMS,
@@ -14,6 +16,8 @@ import {
   INITIAL_FOCUS_SESSIONS,
   INITIAL_DRAFTS,
   INITIAL_AI_MESSAGES,
+  INITIAL_CAPTURE_SOURCES,
+  INITIAL_AUDIT_EVENTS,
 } from "./data/seedData";
 import {
   getAssistantHealth,
@@ -24,9 +28,13 @@ import { readPersistedState, writePersistedState } from "./lib/persistence";
 import type {
   ActivityLifecycle,
   AiChatMessage,
+  AuditEvent,
+  CaptureSourceConfig,
   AppCategory,
   CommunityItemStatus,
   ContentDraft,
+  DailyMood,
+  MoodCheckInRecord,
   NavDestination,
 } from "./types/domain";
 
@@ -41,6 +49,14 @@ const pageTitles: Record<NavDestination, string> = {
 
 function makeMessageId() {
   return `message-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function localDateKey() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function currentTime() {
@@ -74,6 +90,21 @@ export default function App() {
   const [productivityDays, setProductivityDays] = useState(() =>
     readPersistedState("productivity-days", INITIAL_PRODUCTIVITY_DAYS)
   );
+  const [captureSources, setCaptureSources] = useState<CaptureSourceConfig[]>(() =>
+    readPersistedState("capture-sources", INITIAL_CAPTURE_SOURCES)
+  );
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() =>
+    readPersistedState("audit-events", INITIAL_AUDIT_EVENTS)
+  );
+  const [retentionDays, setRetentionDays] = useState<RetentionDays>(() =>
+    readPersistedState<RetentionDays>("retention-days", 30)
+  );
+  const [moodRecords, setMoodRecords] = useState<MoodCheckInRecord[]>(() =>
+    readPersistedState("mood-checkins", [])
+  );
+  // Opens once on each fresh application launch. In-app navigation does not reopen it.
+  const [showMoodCheckIn, setShowMoodCheckIn] = useState(true);
+
   const [aiMessages, setAiMessages] = useState<AiChatMessage[]>(() =>
     readPersistedState("ai-messages", INITIAL_AI_MESSAGES)
   );
@@ -94,6 +125,10 @@ export default function App() {
   useEffect(() => writePersistedState("activities", activities), [activities]);
   useEffect(() => writePersistedState("drafts", drafts), [drafts]);
   useEffect(() => writePersistedState("productivity-days", productivityDays), [productivityDays]);
+  useEffect(() => writePersistedState("capture-sources", captureSources), [captureSources]);
+  useEffect(() => writePersistedState("audit-events", auditEvents), [auditEvents]);
+  useEffect(() => writePersistedState("mood-checkins", moodRecords), [moodRecords]);
+  useEffect(() => writePersistedState("retention-days", retentionDays), [retentionDays]);
   useEffect(() => writePersistedState("ai-messages", aiMessages), [aiMessages]);
 
   useEffect(() => {
@@ -111,6 +146,94 @@ export default function App() {
       active = false;
     };
   }, []);
+
+  const recordAuditEvent = (
+    action: string,
+    resourceType: string,
+    detail: string
+  ) => {
+    const event: AuditEvent = {
+      id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      timestamp: new Date().toISOString(),
+      actor: "Workspace admin",
+      action,
+      resourceType,
+      detail,
+    };
+    setAuditEvents((current) => [event, ...current].slice(0, 500));
+  };
+
+  const toggleCaptureSource = (id: string) => {
+    const source = captureSources.find((item) => item.id === id);
+    if (!source) return;
+
+    const enabled = !source.enabled;
+    setCaptureSources((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, enabled } : item
+      )
+    );
+
+    recordAuditEvent(
+      enabled ? "CAPTURE_SOURCE_PREFERENCE_ENABLED" : "CAPTURE_SOURCE_PREFERENCE_DISABLED",
+      "CaptureSource",
+      `${source.name} preference changed to ${enabled ? "on" : "off"}. No device permission was granted.`
+    );
+  };
+
+  const updateRetention = (days: RetentionDays) => {
+    setRetentionDays(days);
+    recordAuditEvent(
+      "RETENTION_PREFERENCE_UPDATED",
+      "PrivacySettings",
+      `Preferred retention period set to ${days} days. Automatic expiry is not implemented.`
+    );
+  };
+
+  const exportWorkspaceData = () => {
+    const exportEvent: AuditEvent = {
+      id: `audit-${Date.now()}-export`,
+      timestamp: new Date().toISOString(),
+      actor: "Workspace admin",
+      action: "WORKSPACE_DATA_EXPORTED",
+      resourceType: "Workspace",
+      detail: "Workspace data exported as a JSON file by user action.",
+    };
+    const exportAudit = [exportEvent, ...auditEvents].slice(0, 500);
+    setAuditEvents(exportAudit);
+
+    const backup = {
+      exportVersion: 1,
+      exportedAt: new Date().toISOString(),
+      product: "Rising Giants",
+      data: {
+        groupProfile,
+        communityItems,
+        activities,
+        drafts,
+        routines,
+        productivityDays,
+        focusSessions: INITIAL_FOCUS_SESSIONS,
+        aiMessages,
+        moodCheckIns: moodRecords,
+        captureSources,
+        privacy: { retentionDays },
+        auditEvents: exportAudit,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `rising-giants-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const toggleRoutine = (id: string) => {
     setRoutines((current) =>
@@ -238,15 +361,34 @@ export default function App() {
     setAiError(null);
   };
 
+  const todayKey = localDateKey();
+  const todayMood = moodRecords.find((record) => record.dateKey === todayKey) ?? null;
+
+  const saveMoodCheckIn = (mood: DailyMood, note: string) => {
+    const record: MoodCheckInRecord = {
+      id: `mood-${todayKey}`,
+      dateKey: todayKey,
+      mood,
+      note,
+      submittedAt: new Date().toISOString(),
+    };
+    setMoodRecords((current) => [
+      record,
+      ...current.filter((item) => item.dateKey !== todayKey),
+    ].slice(0, 365));
+  };
+
   const needsReviewCount = communityItems.filter(
     (item) => item.status === "review_required" || item.status === "open"
   ).length;
 
   return (
+    <>
     <AppShell
       activeDest={activeDest}
       onNavigate={setActiveDest}
       onOpenCapture={() => alert("Capture workspace coming soon.")}
+      onOpenAssistant={() => setActiveDest("ai")}
       darkMode={darkMode}
       onToggleDarkMode={() => setDarkMode((value) => !value)}
       needsReviewCount={needsReviewCount}
@@ -282,6 +424,15 @@ export default function App() {
           onSendMessage={sendAiMessage}
           onClearConversation={clearConversation}
         />
+      ) : activeDest === "settings" ? (
+        <SettingsScreen
+          captureSources={captureSources}
+          auditEvents={auditEvents}
+          retentionDays={retentionDays}
+          onToggleCaptureSource={toggleCaptureSource}
+          onRetentionChange={updateRetention}
+          onExportData={exportWorkspaceData}
+        />
       ) : activeDest === "home" ? (
         <HomeDashboard
           groupProfile={groupProfile}
@@ -314,5 +465,14 @@ export default function App() {
         </section>
       )}
     </AppShell>
+
+    {showMoodCheckIn && (
+      <DailyMoodCheckIn
+        existing={todayMood}
+        onSave={saveMoodCheckIn}
+        onContinue={() => setShowMoodCheckIn(false)}
+      />
+    )}
+    </>
   );
 }

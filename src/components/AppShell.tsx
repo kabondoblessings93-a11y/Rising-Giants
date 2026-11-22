@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import type { NavDestination } from "../types/domain";
-import { AiIcon, CommunityIcon, HomeIcon, MinistryIcon, MoonIcon, PlusIcon, ProductivityIcon, SettingsIcon, SunIcon, AlertIcon, PauseIcon } from "./Icons";
+import { AiOrbButton } from "./AiOrbButton";
+import { CommunityIcon, HomeIcon, MinistryIcon, MoonIcon, PlusIcon, ProductivityIcon, SettingsIcon, SunIcon, AlertIcon, PauseIcon } from "./Icons";
 
 interface AppShellProps {
   activeDest: NavDestination;
   onNavigate: (dest: NavDestination) => void;
   onOpenCapture: () => void;
+  onOpenAssistant: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
   needsReviewCount: number;
@@ -18,7 +20,6 @@ const NAV = [
   { id: "community" as const, label: "Community", Icon: CommunityIcon },
   { id: "ministry" as const, label: "Ministry", Icon: MinistryIcon },
   { id: "productivity" as const, label: "Productivity", Icon: ProductivityIcon },
-  { id: "ai" as const, label: "Assistant", Icon: AiIcon },
   { id: "settings" as const, label: "Settings", Icon: SettingsIcon },
 ];
 
@@ -31,7 +32,7 @@ const TITLES: Record<NavDestination, { title: string; subtitle: string }> = {
   settings: { title: "Settings", subtitle: "Privacy, capture sources, and audit trail." },
 };
 
-export function AppShell({ activeDest, onNavigate, onOpenCapture, darkMode, onToggleDarkMode, needsReviewCount, allCapturePaused, children }: AppShellProps) {
+export function AppShell({ activeDest, onNavigate, onOpenCapture, onOpenAssistant, darkMode, onToggleDarkMode, needsReviewCount, allCapturePaused, children }: AppShellProps) {
   const current = TITLES[activeDest];
   return (
     <div className="min-h-screen">
@@ -70,8 +71,10 @@ export function AppShell({ activeDest, onNavigate, onOpenCapture, darkMode, onTo
         </main>
       </div>
 
+      <AiOrbButton onClick={onOpenAssistant} hidden={activeDest === "ai"} />
+
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-black/5 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-white/5 dark:bg-[#11151E]/95">
-        <div className="mx-auto grid max-w-5xl grid-cols-6 gap-1 px-2 sm:px-6">
+        <div className="mx-auto grid max-w-5xl grid-cols-5 gap-1 px-2 sm:px-6">
           {NAV.map(({ id, label, Icon }) => {
             const active = activeDest === id;
             return (
