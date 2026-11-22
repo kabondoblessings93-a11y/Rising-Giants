@@ -1,4 +1,15 @@
-import type { ActivityItem, CommunityItem, DailyProductivityRecord, FocusSessionRecord, GroupProfile, NavDestination, RoutineItem } from "../types/domain";
+import type {
+  ActivityItem,
+  CommunityItem,
+  DailyProductivityRecord,
+  FocusSessionRecord,
+  GroupProfile,
+  NavDestination,
+  RoutineItem,
+  MoodCheckInRecord,
+  MoodPlanItem,
+} from "../types/domain";
+import { MoodDashboardSection } from "./MoodDashboardSection";
 import { COMMUNITY_CATEGORY, COMMUNITY_STATUS } from "./meta";
 import { Badge, card } from "./ui";
 import { AlertIcon, ArrowRightIcon, BookIcon, CheckIcon, ClockIcon, PlusIcon, TargetIcon } from "./Icons";
@@ -10,6 +21,12 @@ interface HomeDashboardProps {
   todayProductivity: DailyProductivityRecord;
   routines: RoutineItem[];
   focusSessions: FocusSessionRecord[];
+  todayMood: MoodCheckInRecord | null;
+  moodRecords: MoodCheckInRecord[];
+  todayPlanItems: MoodPlanItem[];
+  onOpenMoodCheckIn: () => void;
+  onAddMoodPlanItem: (title: string) => void;
+  onToggleMoodPlanItem: (id: string) => void;
   onNavigate: (dest: NavDestination, itemId?: string) => void;
   onToggleRoutine: (routineId: string) => void;
   onOpenCapture: () => void;
@@ -26,7 +43,23 @@ function StatCard({ icon, label, value, hint, tint }: { icon: React.ReactNode; l
   );
 }
 
-export function HomeDashboard({ groupProfile, communityItems, activities, todayProductivity, routines, focusSessions, onNavigate, onToggleRoutine, onOpenCapture }: HomeDashboardProps) {
+export function HomeDashboard({
+  groupProfile,
+  communityItems,
+  activities,
+  todayProductivity,
+  routines,
+  focusSessions,
+  todayMood,
+  moodRecords,
+  todayPlanItems,
+  onOpenMoodCheckIn,
+  onAddMoodPlanItem,
+  onToggleMoodPlanItem,
+  onNavigate,
+  onToggleRoutine,
+  onOpenCapture,
+}: HomeDashboardProps) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const needsReview = communityItems.filter((i) => i.status === "open" || i.status === "review_required");
@@ -56,6 +89,15 @@ export function HomeDashboard({ groupProfile, communityItems, activities, todayP
           </button>
         </div>
       </section>
+
+      <MoodDashboardSection
+        todayMood={todayMood}
+        moodRecords={moodRecords}
+        todayPlanItems={todayPlanItems}
+        onOpenMoodCheckIn={onOpenMoodCheckIn}
+        onAddPlanItem={onAddMoodPlanItem}
+        onTogglePlanItem={onToggleMoodPlanItem}
+      />
 
       <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard icon={<AlertIcon width={17} height={17} />} tint="bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300" label="Needs review" value={String(needsReview.length)} hint="Captured items waiting" />

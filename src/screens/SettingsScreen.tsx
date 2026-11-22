@@ -1,4 +1,4 @@
-import type { AuditEvent, CaptureSourceConfig } from "../types/domain";
+import type { AuditEvent, CaptureSourceConfig, MoodCheckInRecord } from "../types/domain";
 
 export type RetentionDays = 30 | 90 | 180;
 
@@ -9,6 +9,10 @@ interface SettingsScreenProps {
   onToggleCaptureSource: (id: string) => void;
   onRetentionChange: (days: RetentionDays) => void;
   onExportData: () => void;
+  moodRecords: MoodCheckInRecord[];
+  onDeleteMoodNote: (id: string) => void;
+  onDeleteMoodRecord: (id: string) => void;
+  onClearMoodHistory: () => void;
 }
 
 const panel =
@@ -21,6 +25,10 @@ export function SettingsScreen({
   onToggleCaptureSource,
   onRetentionChange,
   onExportData,
+  moodRecords,
+  onDeleteMoodNote,
+  onDeleteMoodRecord,
+  onClearMoodHistory,
 }: SettingsScreenProps) {
   return (
     <main className="mx-auto max-w-6xl space-y-7 p-5 sm:p-8">
@@ -177,6 +185,88 @@ export function SettingsScreen({
           This is a saved preference only. Automatic deletion, expiry
           enforcement and backups are not implemented yet. Changing this
           setting will not delete existing information.
+        </p>
+      </section>
+
+      <section className={panel}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              Mood history & privacy
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+              Your mood check-ins and notes are stored in this browser. You can
+              remove a note while keeping its mood entry, delete an entire
+              check-in, or clear all mood history.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={moodRecords.length === 0}
+            onClick={onClearMoodHistory}
+            className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-rose-500/20 dark:text-rose-300 dark:hover:bg-rose-500/10"
+          >
+            Clear all history
+          </button>
+        </div>
+
+        {moodRecords.length === 0 ? (
+          <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-white/5 dark:text-slate-400">
+            No mood check-ins are currently saved.
+          </p>
+        ) : (
+          <div className="mt-5 space-y-3">
+            {moodRecords.map((record) => (
+              <article
+                key={record.id}
+                className="rounded-xl border border-slate-100 p-4 dark:border-white/5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="font-semibold capitalize text-slate-900 dark:text-white">
+                      {record.mood.replace("_", " ")}
+                    </p>
+                    <time className="text-xs text-slate-500">
+                      {record.dateKey}
+                    </time>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteMoodRecord(record.id)}
+                    className="rounded-lg px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                  >
+                    Delete entry
+                  </button>
+                </div>
+
+                {record.note ? (
+                  <div className="mt-3 rounded-lg bg-slate-50 p-3 dark:bg-white/5">
+                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {record.note}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteMoodNote(record.id)}
+                      className="mt-3 text-xs font-semibold text-rose-700 hover:underline dark:text-rose-300"
+                    >
+                      Delete note only
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-slate-400">
+                    No personal note saved for this check-in.
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+
+        <p className="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
+          Deleting a note does not delete its mood entry. Deleting an entry
+          removes its mood and note. Clearing history removes all check-ins
+          and their associated daily plans. These actions cannot be undone
+          unless you have a separate export.
         </p>
       </section>
 

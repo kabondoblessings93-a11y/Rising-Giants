@@ -35,6 +35,7 @@ import type {
   ContentDraft,
   DailyMood,
   MoodCheckInRecord,
+  MoodPlanItem,
   NavDestination,
 } from "./types/domain";
 
@@ -102,6 +103,9 @@ export default function App() {
   const [moodRecords, setMoodRecords] = useState<MoodCheckInRecord[]>(() =>
     readPersistedState("mood-checkins", [])
   );
+  const [moodPlanItems, setMoodPlanItems] = useState<MoodPlanItem[]>(() =>
+    readPersistedState("mood-plan-items", [])
+  );
   // Opens once on each fresh application launch. In-app navigation does not reopen it.
   const [showMoodCheckIn, setShowMoodCheckIn] = useState(true);
 
@@ -128,6 +132,7 @@ export default function App() {
   useEffect(() => writePersistedState("capture-sources", captureSources), [captureSources]);
   useEffect(() => writePersistedState("audit-events", auditEvents), [auditEvents]);
   useEffect(() => writePersistedState("mood-checkins", moodRecords), [moodRecords]);
+  useEffect(() => writePersistedState("mood-plan-items", moodPlanItems), [moodPlanItems]);
   useEffect(() => writePersistedState("retention-days", retentionDays), [retentionDays]);
   useEffect(() => writePersistedState("ai-messages", aiMessages), [aiMessages]);
 
@@ -216,6 +221,7 @@ export default function App() {
         focusSessions: INITIAL_FOCUS_SESSIONS,
         aiMessages,
         moodCheckIns: moodRecords,
+        moodPlanItems,
         captureSources,
         privacy: { retentionDays },
         auditEvents: exportAudit,
@@ -378,6 +384,91 @@ export default function App() {
     ].slice(0, 365));
   };
 
+  const addMoodPlanItem = (title: string) => {
+    if (moodPlanItems.some(
+      (item) => item.dateKey === todayKey && item.title === title
+    )) return;
+
+    const item: MoodPlanItem = {
+      id: `mood-plan-${Date.now()}`,
+      dateKey: todayKey,
+      title,
+      completed: false,
+    };
+
+    setMoodPlanItems((current) => [item, ...current]);
+  };
+
+  const toggleMoodPlanItem = (id: string) => {
+    setMoodPlanItems((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      )
+    );
+  };
+
+  const deleteMoodNote = (id: string) => {
+    const record = moodRecords.find((item) => item.id === id);
+    if (!record?.note) return;
+
+    if (!window.confirm("Delete this personal note? The mood entry will remain.")) {
+      return;
+    }
+
+    setMoodRecords((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, note: "" } : item
+      )
+    );
+
+    recordAuditEvent(
+      "MOOD_NOTE_DELETED",
+      "MoodCheckIn",
+      "A personal mood note was deleted. Note contents were not recorded."
+    );
+  };
+
+  const deleteMoodRecord = (id: string) => {
+    const record = moodRecords.find((item) => item.id === id);
+    if (!record) return;
+
+    if (!window.confirm("Delete this mood check-in and its personal note?")) {
+      return;
+    }
+
+    setMoodRecords((current) =>
+      current.filter((item) => item.id !== id)
+    );
+    setMoodPlanItems((current) =>
+      current.filter((item) => item.dateKey !== record.dateKey)
+    );
+
+    recordAuditEvent(
+      "MOOD_CHECKIN_DELETED",
+      "MoodCheckIn",
+      "A mood check-in, its note and its associated daily plan were deleted."
+    );
+  };
+
+  const clearMoodHistory = () => {
+    if (moodRecords.length === 0) return;
+
+    if (!window.confirm(
+      "Clear all mood check-ins, personal notes and mood-based daily plans? This cannot be undone."
+    )) {
+      return;
+    }
+
+    setMoodRecords([]);
+    setMoodPlanItems([]);
+
+    recordAuditEvent(
+      "MOOD_HISTORY_CLEARED",
+      "MoodCheckIn",
+      "All mood check-ins, personal notes and mood-based daily plans were cleared."
+    );
+  };
+
   const needsReviewCount = communityItems.filter(
     (item) => item.status === "review_required" || item.status === "open"
   ).length;
@@ -432,6 +523,10 @@ export default function App() {
           onToggleCaptureSource={toggleCaptureSource}
           onRetentionChange={updateRetention}
           onExportData={exportWorkspaceData}
+          moodRecords={moodRecords}
+          onDeleteMoodNote={deleteMoodNote}
+          onDeleteMoodRecord={deleteMoodRecord}
+          onClearMoodHistory={clearMoodHistory}
         />
       ) : activeDest === "home" ? (
         <HomeDashboard
@@ -441,6 +536,12 @@ export default function App() {
           todayProductivity={productivityDays[0] ?? INITIAL_PRODUCTIVITY_DAYS[0]!}
           routines={routines}
           focusSessions={INITIAL_FOCUS_SESSIONS}
+          todayMood={todayMood}
+          moodRecords={moodRecords}
+          todayPlanItems={moodPlanItems.filter((item) => item.dateKey === todayKey)}
+          onOpenMoodCheckIn={() => setShowMoodCheckIn(true)}
+          onAddMoodPlanItem={addMoodPlanItem}
+          onToggleMoodPlanItem={toggleMoodPlanItem}
           onNavigate={setActiveDest}
           onToggleRoutine={toggleRoutine}
           onOpenCapture={() => alert("Capture workspace coming soon.")}

@@ -162,3 +162,11 @@ export interface MoodCheckInRecord {
   note: string;
   submittedAt: string;
 }
+
+
+export interface MoodPlanItem {
+  id: string;
+  dateKey: string;
+  title: string;
+  completed: boolean;
+}
