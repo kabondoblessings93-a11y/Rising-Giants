@@ -392,3 +392,478 @@ button {
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   RISING GIANTS SHARED DESIGN SYSTEM
+   ========================================================= */
+
+:root {
+  color-scheme: light;
+  --rg-brand: #2e47a3;
+  --rg-brand-hover: #263c8f;
+  --rg-brand-soft: #edf1ff;
+  --rg-navy: #101a35;
+  --rg-gold: #d9b56d;
+  --rg-canvas: #f4f5f7;
+  --rg-surface: #ffffff;
+  --rg-surface-strong: #ffffff;
+  --rg-ink: #101726;
+  --rg-muted: #667085;
+  --rg-border: rgba(16, 23, 38, .085);
+  --rg-shadow-soft: 0 5px 22px rgba(24, 38, 75, .055);
+  --rg-shadow-raised: 0 14px 42px rgba(24, 38, 75, .13);
+  --rg-card-radius: 20px;
+  --rg-motion-fast: 160ms;
+  --rg-motion-normal: 240ms;
+  --rg-motion-slow: 380ms;
+}
+
+.dark {
+  color-scheme: dark;
+  --rg-brand: #8da3ff;
+  --rg-brand-hover: #a6b5ff;
+  --rg-brand-soft: rgba(75, 104, 216, .16);
+  --rg-navy: #e7ecff;
+  --rg-canvas: #0d1017;
+  --rg-surface: #151a24;
+  --rg-surface-strong: #101620;
+  --rg-ink: #f1f3f8;
+  --rg-muted: #9aa4b5;
+  --rg-border: rgba(255, 255, 255, .085);
+  --rg-shadow-soft: 0 5px 22px rgba(0, 0, 0, .12);
+  --rg-shadow-raised: 0 14px 42px rgba(0, 0, 0, .3);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  background: var(--rg-canvas);
+  color: var(--rg-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, textarea, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--rg-brand);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(46, 71, 163, .18);
+  color: var(--rg-ink);
+}
+
+/* Main shell and header */
+.rg-app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% -25%, rgba(46, 71, 163, .055), transparent 55%),
+    var(--rg-canvas);
+  color: var(--rg-ink);
+}
+.dark .rg-app-shell {
+  background:
+    radial-gradient(ellipse at 50% -25%, rgba(77, 103, 209, .12), transparent 55%),
+    var(--rg-canvas);
+}
+.rg-app-header {
+  border-bottom: 1px solid var(--rg-border);
+  background: color-mix(in srgb, var(--rg-canvas) 84%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.rg-app-header__inner {
+  min-height: 68px;
+}
+.rg-app-header h1 {
+  color: var(--rg-ink);
+}
+.rg-status-warning {
+  border: 1px solid rgba(217, 181, 109, .26);
+  border-radius: 999px;
+  background: rgba(217, 181, 109, .13);
+  padding: 4px 9px;
+  color: #9a6a1a;
+  font-size: 11px;
+  font-weight: 650;
+}
+.dark .rg-status-warning {
+  color: #e7c783;
+}
+
+/* Shared header actions */
+.rg-icon-button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--rg-border);
+  border-radius: 13px;
+  background: var(--rg-surface);
+  color: var(--rg-muted);
+  box-shadow: 0 1px 3px rgba(10, 20, 40, .025);
+  transition: background var(--rg-motion-fast) ease,
+              color var(--rg-motion-fast) ease,
+              border-color var(--rg-motion-fast) ease,
+              transform var(--rg-motion-fast) ease;
+}
+.rg-icon-button:hover {
+  border-color: rgba(46, 71, 163, .22);
+  background: var(--rg-brand-soft);
+  color: var(--rg-brand);
+}
+.rg-icon-button:active {
+  transform: scale(.94);
+}
+.rg-review-pill {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(225, 69, 89, .12);
+  border-radius: 999px;
+  background: rgba(225, 69, 89, .075);
+  padding: 0 12px;
+  color: #c13d51;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background var(--rg-motion-fast) ease, transform var(--rg-motion-fast) ease;
+}
+.rg-review-pill:hover {
+  transform: translateY(-1px);
+  background: rgba(225, 69, 89, .13);
+}
+.dark .rg-review-pill {
+  border-color: rgba(255, 115, 133, .12);
+  color: #ff9cac;
+}
+.rg-capture-button {
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 13px;
+  background: var(--rg-brand);
+  padding: 0 15px;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(46, 71, 163, .16);
+  transition: transform var(--rg-motion-fast) ease, box-shadow var(--rg-motion-fast) ease, background var(--rg-motion-fast) ease;
+}
+.rg-capture-button:hover {
+  transform: translateY(-1px);
+  background: #263c8f;
+  box-shadow: 0 7px 18px rgba(46, 71, 163, .23);
+}
+.rg-capture-button:active {
+  transform: scale(.97);
+}
+
+/* RISING GIANTS curved five-destination navigation dock */
+.rg-bottom-dock {
+  --rg-notch-x: calc(var(--active-index, 0) * 20% + 10%);
+  position: fixed;
+  z-index: 40;
+  left: 12px;
+  right: 12px;
+  bottom: calc(9px + env(safe-area-inset-bottom));
+  width: min(760px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 6px;
+  isolation: isolate;
+}
+
+/* This is the actual dock surface. Its mask cuts the moving curved notch. */
+.rg-bottom-dock__surface {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--rg-border) 85%, transparent);
+  border-radius: 23px;
+  background: color-mix(in srgb, var(--rg-surface) 91%, transparent);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, .10));
+
+  /* Transparent semicircle = real cut-out in the top edge of the dock. */
+  -webkit-mask-image: radial-gradient(
+    circle 36px at var(--rg-notch-x) 0,
+    transparent 0 34px,
+    #000 35px
+  );
+  mask-image: radial-gradient(
+    circle 36px at var(--rg-notch-x) 0,
+    transparent 0 34px,
+    #000 35px
+  );
+}
+
+.rg-bottom-dock__items {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  isolation: isolate;
+}
+
+/* The raised circular button travels with the dock's moving notch. */
+.rg-nav-active-bubble {
+  position: absolute;
+  z-index: 0;
+  top: -19px;
+  left: 0;
+  display: grid;
+  width: 20%;
+  height: 62px;
+  place-items: center;
+  pointer-events: none;
+  transform: translateX(calc(var(--active-index, 0) * 100%));
+  transition: transform 560ms cubic-bezier(.22, 1.25, .36, 1);
+}
+
+.rg-nav-active-bubble::before {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  border: 1px solid var(--rg-border);
+  border-radius: 50%;
+  background: var(--rg-surface);
+  box-shadow: 0 5px 16px rgba(15, 23, 42, .14);
+  content: "";
+}
+
+.rg-nav-active-bubble::after {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, white 16%, transparent);
+  border-radius: 50%;
+  background: var(--rg-brand);
+  box-shadow:
+    0 4px 12px color-mix(in srgb, var(--rg-brand) 32%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, .18);
+  content: "";
+}
+
+.rg-nav-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1 1 20%;
+  min-width: 0;
+  min-height: 61px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  overflow: visible;
+  border: 1px solid transparent;
+  border-radius: 17px;
+  background: transparent;
+  padding: 5px 2px 7px;
+  color: var(--rg-muted);
+  font-size: 10px;
+  font-weight: 600;
+  transition:
+    color var(--rg-motion-normal) ease,
+    transform var(--rg-motion-fast) ease;
+}
+
+.rg-nav-item:hover {
+  color: var(--rg-brand);
+}
+
+.rg-nav-item:active {
+  transform: scale(.94);
+}
+
+.rg-nav-item.is-active {
+  border-color: transparent;
+  background: transparent;
+  color: var(--rg-brand);
+}
+
+.rg-nav-item__icon {
+  position: relative;
+  display: grid;
+  width: 31px;
+  height: 27px;
+  place-items: center;
+  transition:
+    transform 560ms cubic-bezier(.22, 1.25, .36, 1),
+    color 180ms ease;
+}
+
+.rg-nav-item.is-active .rg-nav-item__icon {
+  z-index: 2;
+  color: white;
+  transform: translateY(-14px) scale(1.04);
+}
+
+.rg-nav-item__label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+  transition: transform 350ms ease, color 180ms ease;
+}
+
+.rg-nav-item.is-active .rg-nav-item__label {
+  transform: translateY(5px);
+}
+
+.rg-nav-item__badge {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--rg-surface);
+  border-radius: 50%;
+  background: #e34f63;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #e34f63 12%, transparent);
+}
+
+/* Page transitions and common surfaces */
+.rg-main-content {
+  min-height: calc(100vh - 68px);
+}
+.rg-page-enter {
+  animation: rg-page-enter .24s ease both;
+}
+.rg-card {
+  transition: border-color var(--rg-motion-normal) ease,
+              box-shadow var(--rg-motion-normal) ease,
+              background var(--rg-motion-normal) ease;
+}
+.rg-card:focus-within {
+  border-color: color-mix(in srgb, var(--rg-brand) 22%, var(--rg-border));
+}
+.rg-input {
+  transition: border-color var(--rg-motion-fast) ease,
+              box-shadow var(--rg-motion-fast) ease,
+              background var(--rg-motion-fast) ease;
+}
+.rg-input:focus {
+  border-color: var(--rg-brand);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--rg-brand) 12%, transparent);
+}
+.rg-badge {
+  line-height: 1.35;
+}
+@keyframes rg-page-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Small-screen refinements */
+@media (max-width: 390px) {
+  .rg-bottom-dock {
+    left: 7px;
+    right: 7px;
+    width: calc(100% - 14px);
+    padding: 5px;
+  }
+  .rg-nav-item {
+    min-height: 57px;
+    font-size: 9px;
+  }
+  .rg-nav-item__icon {
+    width: 28px;
+  }
+  .rg-review-pill {
+    padding: 0 9px;
+    font-size: 10px;
+  }
+}
+
+/* Respect device motion preferences throughout the shared shell. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rg-page-enter { animation: none !important; }
+  .rg-nav-item,
+  .rg-nav-item__icon,
+  .rg-nav-active-bubble,
+  .rg-icon-button,
+  .rg-review-pill,
+  .rg-capture-button,
+  .rg-card,
+  .rg-input {
+    transition: none !important;
+  }
+}
+
+
+/* Home dashboard refinements */
+.rg-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.rg-stat-card:hover {
+  border-color: color-mix(in srgb, var(--rg-brand) 22%, var(--rg-border));
+  box-shadow: var(--rg-shadow-raised);
+  transform: translateY(-2px);
+}
+
+.rg-weekly-hero {
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rg-stat-card {
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease,
+      border-color 220ms ease;
+  }
+}
+
+/* RISING GIANTS — blue and white navigation colour swap */
+.rg-bottom-dock__surface {
+  border-color: rgba(255, 255, 255, .28);
+  background: var(--rg-brand);
+}
+
+.rg-nav-active-bubble::before {
+  background: var(--rg-brand);
+  border-color: rgba(255, 255, 255, .3);
+}
+
+.rg-nav-active-bubble::after {
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, .7);
+}
+
+.rg-nav-item {
+  color: rgba(255, 255, 255, .88);
+}
+
+.rg-nav-item:hover,
+.rg-nav-item.is-active {
+  color: #ffffff;
+}
+
+.rg-nav-item.is-active .rg-nav-item__icon {
+  color: var(--rg-brand);
+}
